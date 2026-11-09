@@ -1,0 +1,82 @@
+create table reviews (
+	user_id integer,
+	product_id integer,
+	rating integer,
+	comment text,
+	created_at timestamp default now(),
+	check (rating between 1 and 5),
+	primary key (user_id, product_id),
+	foreign key (user_id) references users(id),
+	foreign key (product_id) references products(id)
+);
+select *
+from reviews;
+
+alter table users 
+add column phone_number text;
+select * 
+from users;
+
+alter table orders 
+add constraint check_quantity_max
+check (quantity <= 10);
+select * from orders;
+
+select conname
+from pg_constraint
+where conname = 'check_quantity_max';
+
+insert into products (name, category, price, stock)
+values ('Studio Desk Lamp', 'Office', 45.50, 25)
+returning id;
+select * 
+from products p where id = 202;
+
+update products 
+set price = price * 1.10
+where category = 'Furniture';
+select name, price 
+from products 
+where category = 'Furniture';
+
+update orders 
+set status = 'cancelled'
+where status = 'pending'
+and created_at < now() - interval '30 days';
+select * 
+from orders 
+where status = 'pending'
+and created_at < now() - interval '30 days';
+
+select p.id, p.name
+from products p
+join orders o
+	on p.id = o.product_id 
+limit 1;
+delete from products 
+where id = 58;
+
+create index idx_orders_status_created_at
+on orders (status, created_at);
+select indexname
+from pg_indexes
+where tablename = 'orders';
+
+begin;
+insert into orders (user_id, product_id, quantity, status)
+values (1, 1, 2, 'pending');
+update products 
+set stock = stock - 2
+where id = 1;
+commit;
+
+select * 
+from orders 
+where user_id = 1
+and product_id = 1
+order by created_at desc 
+limit 1; 
+
+select id, name, stock
+from products 
+where id = 1;
